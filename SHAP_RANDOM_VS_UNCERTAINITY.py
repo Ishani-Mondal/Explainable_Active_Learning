@@ -34,6 +34,7 @@ import matplotlib.pyplot as plt
 import image
 np.random.seed(0)
 random.seed(0)
+tf.random.set_seed(0)
 
 def make_38_Subset(X_train, y_train, X_test, y_test, seed_size):
     '''
@@ -116,11 +117,15 @@ def make_38_Subset(X_train, y_train, X_test, y_test, seed_size):
 
 
 def train(x_seed, y_seed, x_test, y_test):
+    tf.random.set_seed(0)
     input1 = Input(shape=(28,28,1))
     input2 = Input(shape=(28,28,1))
+    tf.random.set_seed(0)
     input2c = Conv2D(32, kernel_size=(3, 3), activation='relu')(input2)
+    tf.random.set_seed(0)
     joint = tf.keras.layers.concatenate([Flatten()(input1), Flatten()(input2c)])
-    out = Dense(10, activation='softmax')(Dropout(0.2)(Dense(128, activation='relu')(joint)))
+    out = Dense(10, activation='softmax')(Dense(128, activation='relu')(joint))
+    tf.random.set_seed(0)
     model = tf.keras.models.Model(inputs = [input1, input2], outputs=out)
     model.compile(optimizer='adam',loss='sparse_categorical_crossentropy',metrics=['accuracy'])
     print(y_seed[0:10])
@@ -352,7 +357,7 @@ def get_random_evaluation(X_train, y_train, X_test, y_test,seed, batch_size):
     s, u, X_test, y_test = make_38_Subset(X_train, y_train, X_test, y_test, seed_size=seed)
 
     batch_size = batch_size
-    niters = 1
+    niters = 5
 
     random_accuracies = []
     seed_set_size=[]
@@ -681,6 +686,7 @@ if __name__ == "__main__":
             print('Random Based', j, i)
             get_random_evaluation(X_train, y_train, X_test, y_test, j, i)
             print('Uncetainity Based', j, i)
-            get_random_evaluation(X_train, y_train, X_test, y_test, j, i)
+            get_uncertainity_evaluation(X_train, y_train, X_test, y_test, j, i)
             print('Explanation based', j, i)
             get_explanation_based_evaluation_1(X_train, y_train, X_test, y_test, j, i)
+

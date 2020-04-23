@@ -21,6 +21,6 @@ For running on the server:
 
 1. pip install shap
 2. Unzip mnist_AL.zip
-3. Place SHAP_RANDOM_VS_UNCERTAINITY.py inside mnist_AL.
+3. Extract out all the pickle files and keep it the main path. 
 4. Run SHAP_RANDOM_VS_UNCERTAINITY.py
 5. The accuracy and shap plots will be saved inside the same folder as the script

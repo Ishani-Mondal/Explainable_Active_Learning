@@ -271,14 +271,12 @@ def select_based_on_explanation_from_unlabeled_2(seed_list, unlabelled_list, bat
     ulabelled_X = np.array(ulabelled_X).reshape(len(ulabelled_X),28,28,1)
     ulabelled_y = np.array(ulabelled_y).reshape(len(ulabelled_y),)
     
-    print(len(seed_list))
-    n_seed_add=2
+    n_seed_add= int(5 * batch_size)
     
     for i in range(n_seed_add):
         del_s, unlabelled_list = select_based_on_uncertainity_from_unlabeled(unlabelled_list, 1, clf)
         seed_list = seed_list + del_s
     
-    print(len(seed_list))
     
     new_x_seed = []
     new_y_seed = []

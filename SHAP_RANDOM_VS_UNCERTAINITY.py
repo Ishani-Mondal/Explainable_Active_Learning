@@ -507,7 +507,7 @@ def get_explanation_based_evaluation_1(X_train, y_train, X_test, y_test,seed, ba
     s, u, X_test, y_test = make_38_Subset(X_train, y_train, X_test, y_test, seed)
 
     batch_size =  batch_size
-    niters = 4
+    niters = 5
 
     expl1_accuracies = []
     seed_set_size = []

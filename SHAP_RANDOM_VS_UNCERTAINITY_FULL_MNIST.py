@@ -82,7 +82,7 @@ def make_Subset(X_train, y_train, X_test, y_test, seed_size):
     with open("y_test_MNIST.pkl", "rb") as fp:
         y_test = pickle.load(fp)
 
-    return seed_list[0:60], unlabelled_list[0:30], X_test, y_test
+    return seed_list, unlabelled_list, X_test, y_test
 
 def train(x_seed, y_seed, x_test, y_test, printFlag=True):
     tf.random.set_seed(0)

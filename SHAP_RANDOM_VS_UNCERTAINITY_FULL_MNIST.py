@@ -729,10 +729,6 @@ if __name__ == "__main__":
     batch_sizes=[5,10,20]
     seed_size = [0.01,0.05,0.1]
 
-    X_train=X_train[0:50]
-    y_train=y_train[0:50]
-    X_test=X_test[0:20]
-    y_test=y_test[0:20]
     for i in batch_sizes:
         for j in seed_size:
             print('Random Based', j, i)

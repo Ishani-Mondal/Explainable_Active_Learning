@@ -14,10 +14,8 @@ from sklearn.utils import check_random_state
 import sklearn
 from sklearn.metrics import roc_auc_score
 import random
-random.seed(124)
 from scipy.stats import entropy
 import numpy as np
-np.random.seed(124)
 import logging
 
 import pickle
@@ -31,13 +29,9 @@ import argparse
 import shap
 import matplotlib.pyplot as plt
 import image
-np.random.seed(124)
-random.seed(124)
-tf.random.set_seed(124)
-
 from keras.datasets import fashion_mnist
 
-'''
+
 def fashionMNIST():
     t0 = time.time()
     (X_train, y_train), (X_test, y_test) = fashion_mnist.load_data()
@@ -55,7 +49,7 @@ def fashionMNIST():
     print(len(X_test))
     print("==================")
     return X_train, y_train, X_test, y_test
-'''
+
 
 def make_Subset(X_train, y_train, X_test, y_test, seed_size):
     templist = []
@@ -77,32 +71,7 @@ def make_Subset(X_train, y_train, X_test, y_test, seed_size):
         X_test.append(tup[0])
         y_test.append(tup[1])
 
-    '''
-    if(seed_size==0.01):
-        seed_s = int(seed_size*len(templist))
-        seed_list=templist[0:seed_s]
-        pickle.dump(seed_list, open("seed_1_FMNIST.pkl", "wb" ))
-        unlabelled_list=templist[seed_s:]
-        pickle.dump(unlabelled_list, open("unlabelled_1_FMNIST.pkl", "wb" ))
-
-    if(seed_size==0.05):
-        seed_s = int(seed_size*len(templist))
-        seed_list=templist[0:seed_s]
-        pickle.dump(seed_list, open("seed_5_FMNIST.pkl", "wb" ))
-        unlabelled_list=templist[seed_s:]
-        pickle.dump(unlabelled_list, open("unlabelled_5_FMNIST.pkl", "wb" ))
-
-    if(seed_size==0.1):
-        seed_s = int(seed_size*len(templist))
-        seed_list=templist[0:seed_s]
-        pickle.dump(seed_list, open("seed_10_FMNIST.pkl", "wb" ))
-        unlabelled_list=templist[seed_s:]
-        pickle.dump(unlabelled_list, open("unlabelled_10_FMNIST.pkl", "wb" ))
-
-    pickle.dump(X_test, open("X_test_FMNIST.pkl", "wb" ))
-    pickle.dump(y_test, open("y_test_FMNIST.pkl", "wb" ))
-    '''
-
+    
     if(seed_size==0.1):
         with open("seed_10_FMNIST.pkl", "rb") as fp:
             seed_list = pickle.load(fp)
@@ -139,19 +108,14 @@ def train(x_seed, y_seed, x_test, y_test, printFlag=True):
     tf.random.set_seed(0)
     input1 = Input(shape=(28,28,1))
     input2 = Input(shape=(28,28,1))
-    tf.random.set_seed(0)
     input2c = Conv2D(32, kernel_size=(3, 3), activation='relu')(input2)
-    tf.random.set_seed(0)
     joint = tf.keras.layers.concatenate([Flatten()(input1), Flatten()(input2c)])
     out = Dense(10, activation='softmax')(Dense(128, activation='relu')(joint))
-    tf.random.set_seed(0)
     model = tf.keras.models.Model(inputs = [input1, input2], outputs=out)
     model.compile(optimizer='adam',loss='sparse_categorical_crossentropy',metrics=['accuracy'])
-    #print(y_seed[0:10])
     model.fit([x_seed, x_seed], y_seed, epochs=1)
     logging.info("=======Evaluation========")
     scores = model.evaluate([x_test,x_test], y_test, verbose=0)
-    #print(y_test[0:10])
     logging.info(scores[0])
     if(printFlag==True):
         logging.info("Accuracy on Test Set: "+str(scores[1]*100)+" %")
@@ -191,7 +155,7 @@ def select_based_on_uncertainity_from_unlabeled(unlabelled_list, batch_size, clf
     
     ulabelled_X = np.array((np.array(ulabelled_X).reshape(len(ulabelled_X),28,28,1)))
     predictions = clf.predict([ulabelled_X,ulabelled_X])
-    #print(predictions[0][3])
+    
     for i in range(batch_size):
         predictions_label_wise=np.array(predictions)
         uncertainity_list = list(1-predictions_label_wise.max(axis=1))
@@ -199,9 +163,7 @@ def select_based_on_uncertainity_from_unlabeled(unlabelled_list, batch_size, clf
         del_s.append(unlabelled_list[max_index])
         del unlabelled_list[max_index]
         modified_u = unlabelled_list
-    
-    #print(len(del_s))
-    #print(len(modified_u))
+
     return del_s, modified_u
 
 
@@ -226,14 +188,10 @@ def select_based_on_uncertainity_from_unlabeled(unlabelled_list, batch_size, clf
         del_s.append(unlabelled_list[max_index])
         del unlabelled_list[max_index]
         modified_u = unlabelled_list
-    
-    #print(len(del_s))
-    #print(len(modified_u))
     return del_s, modified_u
 
 def select_based_on_explanation_from_unlabeled(seed_list, unlabelled_list, batch_size, clf):
-    #print(len(seed_list))
-    #print(len(unlabelled_list))
+
     ulabelled_X=[]
     ulabelled_y=[]
     
@@ -338,93 +296,139 @@ def select_based_on_entropy_uncertainity_from_unlabeled(unlabelled_list, batch_s
     return del_s, unlabelled_list
 
 
-def explanation_variant_2(seed_list, unlabelled_list, batch_size, clf, X_test, y_test):
-    seed_X=[]
-    seed_y=[]
+def density_based_selection(s, u, batch_size):
+    np.random.seed(0)
+    x_seed = []
+    for i in range(len(s)):
+        x_seed.append(s[i][0])
 
-    for tup in seed_list:
-        seed_X.append(list(tup[0]))
-        seed_y.append(list(str(tup[1])))
-    
-    seed_X = np.array(seed_X).reshape(len(seed_X),28,28,1)
-    seed_y = np.array(seed_y).reshape(len(seed_y),)
-    
-    ## Generate SHAP based explanations using clf trained on S on the strong labelled S
-    predictions_seed = np.argmax(clf.predict([seed_X, seed_X]), axis=1)
-    explainer = shap.GradientExplainer(clf, [seed_X, seed_X])
-    shap_values_seed_EV1 = explainer.shap_values([seed_X, seed_X])
-    
-    ## Sample K*B points from unlabelled data using uncertainity sampling
-    del_s, u = select_based_on_entropy_uncertainity_from_unlabeled(unlabelled_list, 3*batch_size, clf)
-    
-    ## New set of unlabelled points
-    new_unlabelled_KBS = del_s
-    
-    #Generate weak labels for the seed set
-    new_points_X=[]
-    new_points_y=[]
+    #X=np.array(s)
+    kmeans = KMeans(n_clusters = 1)
+    kmeans.fit(x_seed)
+    mean_s = np.array(kmeans.cluster_centers_)
 
-    for tup in new_unlabelled_KBS:
-        new_points_X.append(list(tup[0]))
-        new_points_y.append(list(str(tup[1])))
+    x_u = []
+    for i in range(len(u)):
+        x_u.append(u[i][0])
+
+    distance_from_s=[]
+    for elem in x_u:
+        distance_from_s.append(distance.cosine(elem, mean_s))
+
+
+    modified_u = [] # modified unlabeled
+    del_s = [] # new points to add to s
     
-    new_points_X = np.array(new_points_X).reshape(len(new_points_X),28,28,1)
-    new_points_y = np.array(new_points_y).reshape(len(new_points_y),)
+    for i in range(batch_size):
+        index=distance_from_s.index(max(distance_from_s))
+        del_s.append(u[distance_from_s.index(max(distance_from_s))])
+        del u[index]
+
+
+    return del_s, u
+
+def get_density_based_evaluation(X_train, y_train, X_test, y_test,seed, batch_size):
+    print ("Getting MNIST classification data...")
+    s, u, X_test, y_test = make_Subset(X_train, y_train, X_test, y_test, seed_size=seed)
     
-    print(len(new_points_X))
-    predicted_y = np.argmax(clf.predict([new_points_X, new_points_X]), axis=1)
-    print(predicted_y)
-    
-    ## Generate SHAP based explanations using clf trained on K on the weak labelled S
-    clf2, accuracy = train(new_points_X, predicted_y, X_test, y_test, printFlag=False)
-    
-    explainer = shap.GradientExplainer(clf2, [new_points_X, new_points_X])
-    shap_values_seed_EV2 = explainer.shap_values([new_points_X, new_points_X])
-    
-    seed_vectors_1 = []
-    for i in range(len(predictions_seed)):
-        pred_label = predictions_seed[i]
-        print(pred_label)
-        seed_vectors_1.append(shap_values_seed_EV1[int(pred_label)][1][i].reshape(1,784)[0])
-        #np.append(seed_vectors, shap_values_seed_EV1[int(pred_label)][1][i].reshape(1,784)[0], axis=None)
+    batch_size = batch_size
+    niters = 10
+
+    random_accuracies = []
+    seed_set_size=[]
+
+    for i in range(niters):
         
-    seed_vectors_2 = []
-    for i in range(len(predicted_y)):
-        pred_label = predicted_y[i]
-        print(pred_label)
-        #print(shap_values_seed_EV2[int(pred_label)][1][i].reshape(1,784)[0])
-        seed_vectors_2.append(shap_values_seed_EV2[int(pred_label)][1][i].reshape(1,784)[0])
+        print("|S|_{} = {}, |U|_{} = {}".format(i, len(s), i, len(u)))
+        x_seed = []
+        y_seed = []
+
+        for i in range(len(s)):
+            x_seed.append(s[i][0])
+            y_seed.append(s[i][1])
         
+        x_seed = np.array(x_seed).reshape(len(x_seed),28,28,1)
+        x_seed = x_seed.astype(float)
         
-    print(len(seed_vectors_1), len(seed_vectors_2))
-    
-    # compare the cosine distance between the shap explanation vectors
-    
-    from scipy import spatial
-    distance_dictionary={}
-    c=0
-    
-    for elem2 in seed_vectors_2:
-        distance=0
-        for elem1 in seed_vectors_1:
-            distance=distance+spatial.distance.cosine(list(elem1), list(elem2))
-        distance_dictionary[c]=distance/len(seed_vectors_1)
-        c=c+1
+        y_seed = np.array(y_seed).reshape(len(y_seed),)
+        y_seed = y_seed.astype(float)
         
-    import operator
-    sorted_d = dict(sorted(distance_dictionary.items(), key=operator.itemgetter(1),reverse=True))
-    indices = list(sorted_d.keys())[0:batch_size]
+        X_test = np.array(X_test).reshape(len(X_test),28,28,1)
+        X_test = X_test.astype(float)
+        
+        y_test = np.array(y_test).reshape(len(y_test),)
+        y_test = y_test.astype(float)
+        
+        clf, accuracy = train(x_seed, y_seed, X_test, y_test, printFlag=True)
+        random_accuracies.append(accuracy)
+        seed_set_size.append(len(s))    
+        #batch_size=len(s)
+        del_s, u = density_based_selection(s, u, batch_size)
+        s = s + del_s
+        
+        final_s = s
+    logging.info("Writing Density Results......")
+    f=open('MNIST_Accuracy_density_'+str(seed)+'_'+str(batch_size),'w')
     
-    seed_X_tobeadded=[]
-    seed_y_tobeadded=[]
+    for i in range(len(seed_set_size)):
+        f.write(str(seed_set_size[i])+'\t'+str(random_accuracies[i])+'\n')
+
+    f.close()
+
+    X_seed=[]
+    y_seed=[]
+
+
+    for tup in final_s:
+        X_seed.append(tup[0])
+        y_seed.append(tup[1])
+
+    #print(y_seed)
+    print('Writing Final Seed of Density..........')
+    f=open('Final_seed_of_Density.txt','w')
+    for i in range(len(y_seed)):
+        #print(y_seed[i])
+        f.write(str(i)+"\t"+str(y_seed[i])+"\n")
+
+    X_seed = np.array(X_seed).reshape(len(X_seed),28,28,1)
+    y_seed = np.array(y_seed).reshape(len(y_seed),)
+            
+    import shap
+
+    # since we have two inputs we pass a list of inputs to the explainer
+    explainer = shap.GradientExplainer(clf, [X_seed, X_seed])
+
+def select_based_on_entropy_uncertainity_from_unlabeled(unlabelled_list, batch_size, clf):
+    ulabelled_X=[]
+    ulabelled_y=[]
     
-    del_s_final = []
+    for tup in unlabelled_list:
+        ulabelled_X.append(list(tup[0]))
+        ulabelled_y.append(list(str(tup[1])))
+        
+    modified_u = [] # modified unlabeled
+    del_s = [] # new points to add to s
+    
+    ulabelled_X = np.array((np.array(ulabelled_X).reshape(len(ulabelled_X),28,28,1)))
+    predictions = clf.predict([ulabelled_X,ulabelled_X])
+    np_predictions=np.array(predictions)
+    unsorted_entropy_list=list(entropy(np_predictions, base=10,axis=1))
+    entropy_list=list(sorted(unsorted_entropy_list, reverse=True))
+    max_elements=entropy_list[:batch_size]
+    
+    indices=[]
+    for elem in max_elements:
+        index = unsorted_entropy_list.index(elem)
+        indices.append(index)
+        
     for index in indices:
-        del_s_final.append(new_unlabelled_KBS[index])
+        del_s.append(list(unlabelled_list[index]))
         
-    return del_s_final, u
-
-
+    
+    for index in list(sorted(indices, reverse=True)):
+        del unlabelled_list[index]
+        
+    return del_s, unlabelled_list
 
 def get_random_evaluation(X_train, y_train, X_test, y_test,seed, batch_size):
     print ("Getting MNIST classification data...")
@@ -500,6 +504,52 @@ def get_random_evaluation(X_train, y_train, X_test, y_test,seed, batch_size):
     pl.savefig('MNIST_shap_plot_random_'+str(seed)+'_'+str(batch_size)+'.png')
     #plt.savefig('books_read.png')
     #plt.savefig('shap_random_'+str(seed)+"_"+str(batch_size)+'.png')
+
+def get_uncertainity_evaluation_2(X_train, y_train, X_test, y_test,seed, batch_size):
+    print ("Getting MNIST classification data...")
+    s, u, X_test, y_test = make_Subset(X_train, y_train, X_test, y_test, seed)
+
+    batch_size = batch_size
+    niters = 10
+
+    max_uncertainity_accuracies = []
+    seed_set_size = []
+
+    for i in range(niters):
+        print("|S|_{} = {}, |U|_{} = {}".format(i, len(s), i, len(u)))
+        x_seed = []
+        y_seed = []
+
+        for i in range(len(s)):
+            x_seed.append(s[i][0])
+            y_seed.append(s[i][1])
+
+        x_seed = np.array(x_seed).reshape(len(x_seed),28,28,1)
+        x_seed = x_seed.astype(float)
+        
+        y_seed = np.array(y_seed).reshape(len(y_seed),)
+        y_seed = y_seed.astype(float)
+        
+        X_test = np.array(X_test).reshape(len(X_test),28,28,1)
+        X_test = X_test.astype(float)
+        y_test = np.array(y_test).reshape(len(y_test),)
+        y_test = y_test.astype(float)
+        clf, accuracy = train(x_seed, y_seed, X_test, y_test, printFlag=True)
+        predictions = clf.predict([X_test, X_test])
+        #print(np.argmax(predictions, axis=1))
+        max_uncertainity_accuracies.append(accuracy)
+        seed_set_size.append(len(s))    
+        #batch_size=len(s)
+        del_s, u = select_based_on_entropy_uncertainity_from_unlabeled(u, batch_size, clf)
+        s = s + del_s
+            
+        final_s = s
+
+    logging.info("Writing Uncertain Results 2......")
+    f=open('MNIST_Accuracy_uncertain_2_'+str(seed)+'_'+str(batch_size),'w')
+    
+    for i in range(len(seed_set_size)):
+        f.write(str(seed_set_size[i])+'\t'+str(max_uncertainity_accuracies[i])+'\n')
 
 
 def select_based_on_entropy_uncertainity_from_unlabeled(unlabelled_list, batch_size, clf):
@@ -766,18 +816,7 @@ def get_evaluation_based_explanation_2(X_train, y_train, X_test, y_test,seed_siz
 
 if __name__ == "__main__":  
 
-    
-    with open("X_train_FMNIST.pkl", "rb") as fp:
-        X_train = pickle.load(fp)
-        
-    with open("y_train_FMNIST.pkl", "rb") as fp:
-        y_train = pickle.load(fp)
-        
-    with open("X_test_FMNIST.pkl", "rb") as fp:
-        X_test = pickle.load(fp)
-        
-    with open("y_test_FMNIST.pkl", "rb") as fp:
-        y_test = pickle.load(fp) 
+    X_train, y_train, X_test, y_test=fashionMNIST()
 
     batch_sizes=[5,10,20]
     seed_size = [0.01, 0.05, 0.1]
@@ -786,9 +825,12 @@ if __name__ == "__main__":
         for j in seed_size:
             print('Random Based', j, i)
             get_random_evaluation(X_train, y_train, X_test, y_test, j, i)
-            print('Uncetainity Based', j, i)
+            print('Uncetainity Based 1', j, i)
             get_uncertainity_evaluation(X_train, y_train, X_test, y_test, j, i)
-            print('Explanation based Variant 1', j, i)
+            print('Uncetainity Based 2', j, i)
+            get_uncertainity_evaluation_2(X_train, y_train, X_test, y_test, j, i)
+            print('Density weighting based', j, i)
+            get_density_based_evaluation(X_train, y_train, X_test, y_test, j, i)
+            print('Explanation based', j, i)
             get_explanation_based_evaluation_1(X_train, y_train, X_test, y_test, j, i)
-            print('Explanation based Variant 2', j, i)
-            get_evaluation_based_explanation_2(X_train, y_train, X_test, y_test, j, i)
+            

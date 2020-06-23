@@ -811,7 +811,7 @@ if __name__ == "__main__":
 
     X_train, y_train, X_test, y_test=fashionMNIST()
 
-    batch_sizes=[5,10,20]
+    batch_sizes=[10,50,100]
     seed_size = [0.01, 0.05, 0.1]
 
     for i in batch_sizes:

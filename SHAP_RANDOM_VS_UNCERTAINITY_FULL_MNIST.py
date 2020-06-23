@@ -76,24 +76,24 @@ def make_Subset(X_train, y_train, X_test, y_test, seed_size):
         y_test.append(tup[1])
     
     if(seed_size==0.1):
-        with open("seed_10_MNIST.pkl", "rb") as fp:
+        with open("data/seed_10_MNIST.pkl", "rb") as fp:
             seed_list = pickle.load(fp)
 
-        with open("unlabelled_10_MNIST.pkl", "rb") as fp:
+        with open("data/unlabelled_10_MNIST.pkl", "rb") as fp:
             unlabelled_list = pickle.load(fp)
 
     if(seed_size==0.05):
-        with open("seed_5_MNIST.pkl", "rb") as fp:
+        with open("data/seed_5_MNIST.pkl", "rb") as fp:
             seed_list = pickle.load(fp)
 
-        with open("unlabelled_5_MNIST.pkl", "rb") as fp:
+        with open("data/unlabelled_5_MNIST.pkl", "rb") as fp:
             unlabelled_list = pickle.load(fp)
 
     if(seed_size==0.01):
-        with open("seed_1_MNIST.pkl", "rb") as fp:
+        with open("data/seed_1_MNIST.pkl", "rb") as fp:
             seed_list = pickle.load(fp)
 
-        with open("unlabelled_1_MNIST.pkl", "rb") as fp:
+        with open("data/unlabelled_1_MNIST.pkl", "rb") as fp:
             unlabelled_list = pickle.load(fp)
 
 

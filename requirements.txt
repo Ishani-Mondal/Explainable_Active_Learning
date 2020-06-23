@@ -1,10 +1,5 @@
 Keras==2.3.1
-keyring==21.1.0
 numpy==1.18.1
-scikit-learn==0.21.3
-scikit-plot==0.3.7
 scipy==1.4.1
 shap==0.35.0
-spyder==3.3.6
-spyder-kernels==0.5.2
 tensorflow==2.1.0

@@ -6,7 +6,6 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.datasets import fetch_openml
-from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
@@ -73,31 +72,26 @@ def make_Subset(X_train, y_train, X_test, y_test, seed_size):
 
     
     if(seed_size==0.1):
-        with open("seed_10_FMNIST.pkl", "rb") as fp:
+        with open("data/seed_10_FMNIST.pkl", "rb") as fp:
             seed_list = pickle.load(fp)
 
-        with open("unlabelled_10_FMNIST.pkl", "rb") as fp:
+        with open("data/unlabelled_10_FMNIST.pkl", "rb") as fp:
             unlabelled_list = pickle.load(fp)
 
     if(seed_size==0.05):
-        with open("seed_5_FMNIST.pkl", "rb") as fp:
+        with open("data/seed_5_FMNIST.pkl", "rb") as fp:
             seed_list = pickle.load(fp)
 
-        with open("unlabelled_5_FMNIST.pkl", "rb") as fp:
+        with open("data/unlabelled_5_FMNIST.pkl", "rb") as fp:
             unlabelled_list = pickle.load(fp)
 
     if(seed_size==0.01):
-        with open("seed_1_FMNIST.pkl", "rb") as fp:
+        with open("data/seed_1_FMNIST.pkl", "rb") as fp:
             seed_list = pickle.load(fp)
 
-        with open("unlabelled_1_FMNIST.pkl", "rb") as fp:
+        with open("data/unlabelled_1_FMNIST.pkl", "rb") as fp:
             unlabelled_list = pickle.load(fp)
 
-    with open("X_test_FMNIST.pkl", "rb") as fp:
-        X_test = pickle.load(fp)
-
-    with open("y_test_FMNIST.pkl", "rb") as fp:
-        y_test = pickle.load(fp)
     
     #print(seed_list)
 

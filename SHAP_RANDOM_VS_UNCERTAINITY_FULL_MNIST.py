@@ -147,12 +147,6 @@ def train(x_seed, y_seed, x_test, y_test, printFlag=True):
     model.fit([x_seed, x_seed], y_seed, epochs=1)
     logging.info("=======Evaluation========")
     scores = model.evaluate([x_test,x_test], y_test, verbose=0)
-    predictions = np.argmax(model.predict_on_batch([x_test,x_test]),axis=1)
-    print(predictions[0:2], y_test[0:2])
-    target_names=['0','1','2','3','4','5','6','7','8','9']
-    print(classification_report(y_test, predictions, target_names=target_names))
-    fpr, tpr, thresholds = sklearn.metrics.roc_curve(y_test, predictions, pos_label=2)
-    print(sklearn.metrics.auc(fpr, tpr))
     logging.info(scores[0])
     if(printFlag==True):
         logging.info("Accuracy on Test Set: "+str(scores[1]*100)+" %")

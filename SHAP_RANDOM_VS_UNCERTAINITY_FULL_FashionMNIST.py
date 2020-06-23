@@ -297,7 +297,6 @@ def select_based_on_entropy_uncertainity_from_unlabeled(unlabelled_list, batch_s
 
 
 def density_based_selection(s, u, batch_size):
-    np.random.seed(0)
     x_seed = []
     for i in range(len(s)):
         x_seed.append(s[i][0])
